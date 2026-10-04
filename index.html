@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+   content="width=device-width,
+            initial-scale=1,
+            maximum-scale=1,
+            user-scalable=no,
+            viewport-fit=cover">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+
+<title>iPhoneVR</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #020208;
+    color: white;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "Helvetica Neue",
+        sans-serif;
+
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+body {
+    position: fixed;
+    inset: 0;
+}
+
+/* --------------------------------------------------
+   CAMERA
+-------------------------------------------------- */
+
+#camera {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    z-index: 0;
+
+    opacity: 0.25;
+
+    background: #020208;
+}
+
+/*
+   Don't mirror the rear camera.
+*/
+#camera {
+    transform: none;
+}
+
+/* --------------------------------------------------
+   BACKGROUND
+-------------------------------------------------- */
+
+#background {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            rgba(60, 80, 170, 0.20),
+            transparent 45%
+        ),
+
+        radial-gradient(
+            circle at 50% 50%,
+            rgba(0, 0, 0, 0.2),
+            rgba(0, 0, 0, 0.82)
+        );
+}
+
+/* --------------------------------------------------
+   MAIN UI
+-------------------------------------------------- */
+
+#app {
+    position: fixed;
+    inset: 0;
+
+    z-index: 10;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        env(safe-area-inset-top)
+        20px
+        env(safe-area-inset-bottom)
+        20px;
+}
+
+/* --------------------------------------------------
+   TOP BAR
+-------------------------------------------------- */
+
+#topbar {
+    position: fixed;
+
+    top: calc(env(safe-area-inset-top) + 12px);
+
+    left: 18px;
+    right: 18px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    font-size: 12px;
+
+    color: rgba(255,255,255,0.75);
+
+    pointer-events: none;
+}
+
+#cameraStatus {
+    transition: 0.2s ease;
+}
+
+#controllerStatus {
+    text-align: right;
+}
+
+/* --------------------------------------------------
+   TITLE
+-------------------------------------------------- */
+
+#title {
+    position: relative;
+
+    margin-bottom: 24px;
+
+    font-size: clamp(24px, 7vw, 34px);
+
+    font-weight: 700;
+
+    letter-spacing: 0.04em;
+
+    text-shadow:
+        0 0 10px rgba(100,130,255,0.6),
+        0 0 30px rgba(100,130,255,0.25);
+}
+
+/* --------------------------------------------------
+   HONEYCOMB
+-------------------------------------------------- */
+
+#honeycomb {
+    position: relative;
+
+    width: min(430px, 96vw);
+
+    height: 350px;
+
+    transform: translateZ(0);
+}
+
+/* --------------------------------------------------
+   HEX BUTTON
+-------------------------------------------------- */
+
+.hex {
+    position: absolute;
+
+    width: 112px;
+    height: 112px;
+
+    border: 0;
+
+    padding: 0;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(55,65,110,0.92),
+            rgba(15,18,38,0.94)
+        );
+
+    clip-path:
+        polygon(
+            25% 6.7%,
+            75% 6.7%,
+            100% 50%,
+            75% 93.3%,
+            25% 93.3%,
+            0 50%
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+        transform 130ms cubic-bezier(.2,.9,.2,1),
+        filter 130ms ease,
+        background 130ms ease;
+
+    filter:
+        drop-shadow(
+            0 8px 20px rgba(0,0,0,0.5)
+        );
+}
+
+/* Inner edge */
+
+.hex::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 3px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(100,120,190,0.28),
+            rgba(5,8,20,0.45)
+        );
+
+    clip-path:
+        polygon(
+            25% 6.7%,
+            75% 6.7%,
+            100% 50%,
+            75% 93.3%,
+            25% 93.3%,
+            0 50%
+        );
+
+    pointer-events: none;
+}
+
+/* Actual contents */
+
+.hexContent {
+    position: relative;
+
+    z-index: 2;
+
+    text-align: center;
+
+    pointer-events: none;
+}
+
+.hexIcon {
+    display: block;
+
+    font-size: 31px;
+
+    line-height: 1;
+
+    margin-bottom: 7px;
+}
+
+.hexText {
+    display: block;
+
+    font-size: 13px;
+
+    font-weight: 650;
+}
+
+/* Hover */
+
+.hex:hover {
+    transform: scale(1.05);
+
+    filter:
+        drop-shadow(
+            0 0 22px rgba(100,140,255,0.75)
+        );
+}
+
+/* Press */
+
+.hex.pressed {
+    transform: scale(0.89);
+
+    filter:
+        drop-shadow(
+            0 0 30px rgba(120,160,255,1)
+        );
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(90,110,190,1),
+            rgba(30,35,75,1)
+        );
+}
+
+/* Controller selected */
+
+.hex.selected {
+    transform: scale(1.06);
+
+    filter:
+        drop-shadow(
+            0 0 24px rgba(130,160,255,0.95)
+        );
+}
+
+/* --------------------------------------------------
+   POSITIONS
+-------------------------------------------------- */
+
+#games {
+    left: 50%;
+    top: 0;
+
+    transform: translateX(-50%);
+}
+
+#youtube {
+    left: calc(50% - 108px);
+    top: 78px;
+}
+
+#browser {
+    left: calc(50% + 0px);
+    top: 78px;
+}
+
+#photos {
+    left: calc(50% - 54px);
+    top: 156px;
+}
+
+#settings {
+    left: calc(50% + 54px);
+    top: 156px;
+}
+
+#about {
+    left: calc(50% - 108px);
+    top: 234px;
+}
+
+#vr {
+    left: calc(50% + 0px);
+    top: 234px;
+}
+
+/* --------------------------------------------------
+   BOTTOM HINT
+-------------------------------------------------- */
+
+#hint {
+    position: fixed;
+
+    bottom:
+        calc(
+            env(safe-area-inset-bottom) + 15px
+        );
+
+    padding: 10px 16px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(10,12,25,0.68);
+
+    backdrop-filter: blur(14px);
+
+    font-size: 11px;
+
+    color: rgba(255,255,255,0.72);
+}
+
+/* --------------------------------------------------
+   PANEL
+-------------------------------------------------- */
+
+#panel {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 100;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 24px;
+
+    background:
+        rgba(2,3,10,0.90);
+
+    backdrop-filter: blur(22px);
+}
+
+#panel.open {
+    display: flex;
+}
+
+.panelCard {
+    width: min(520px, 94vw);
+
+    padding: 26px;
+
+    border-radius: 26px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(30,35,65,0.97),
+            rgba(10,12,25,0.97)
+        );
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,0.7);
+
+    text-align: center;
+
+    animation:
+        panelIn 180ms cubic-bezier(.2,.9,.2,1);
+}
+
+@keyframes panelIn {
+
+    from {
+        transform: scale(0.88);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+}
+
+.panelCard h2 {
+    margin-top: 0;
+
+    font-size: 25px;
+}
+
+.panelCard p {
+    color: rgba(255,255,255,0.75);
+
+    line-height: 1.5;
+}
+
+.panelButton {
+    border: 0;
+
+    padding: 13px 19px;
+
+    margin: 5px;
+
+    border-radius: 15px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            145deg,
+            #536cff,
+            #394bc0
+        );
+
+    font-weight: 700;
+
+    font-size: 14px;
+
+    transition:
+        transform 100ms ease,
+        filter 100ms ease;
+}
+
+.panelButton:active {
+    transform: scale(0.92);
+
+    filter: brightness(1.3);
+}
+
+.small {
+    font-size: 12px;
+
+    opacity: 0.65;
+}
+
+/* --------------------------------------------------
+   VR MODE
+-------------------------------------------------- */
+
+body.vrMode #topbar,
+body.vrMode #title,
+body.vrMode #hint {
+    display: none;
+}
+
+body.vrMode #honeycomb {
+    transform:
+        scale(1.12)
+        translateZ(0);
+}
+
+/* --------------------------------------------------
+   LANDSCAPE
+-------------------------------------------------- */
+
+@media (orientation: landscape) {
+
+    #title {
+        margin-bottom: 10px;
+    }
+
+    #honeycomb {
+        transform: scale(0.82);
+    }
+
+}
+
+/* --------------------------------------------------
+   REDUCED MOTION
+-------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- REAR CAMERA -->
+
+<video
+ id="camera"
+ autoplay
+ muted
+ playsinline> </video>
+
+<div id="background"></div>
+
+<!-- TOP STATUS -->
+
+<div id="topbar">
+
+```
+<span id="cameraStatus">
+    Camera: starting…
+</span>
+
+<span id="controllerStatus">
+    Controller: none
+</span>
+```
+
+</div>
+
+<!-- MAIN HOME -->
+
+<main id="app">
+
+```
+<div id="title">
+    iPhoneVR
+</div>
+
+<div id="honeycomb">
+
+    <button
+        class="hex"
+        id="games"
+        data-action="games">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                🎮
+            </span>
+
+            <span class="hexText">
+                Games
+            </span>
+
+        </div>
+
+    </button>
+
+    <button
+        class="hex"
+        id="youtube"
+        data-action="youtube">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                ▶️
+            </span>
+
+            <span class="hexText">
+                YouTube
+            </span>
+
+        </div>
+
+    </button>
+
+    <button
+        class="hex"
+        id="browser"
+        data-action="browser">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                🌐
+            </span>
+
+            <span class="hexText">
+                Web
+            </span>
+
+        </div>
+
+    </button>
+
+    <button
+        class="hex"
+        id="photos"
+        data-action="photos">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                🌀
+            </span>
+
+            <span class="hexText">
+                360°
+            </span>
+
+        </div>
+
+    </button>
+
+    <button
+        class="hex"
+        id="settings"
+        data-action="settings">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                ⚙️
+            </span>
+
+            <span class="hexText">
+                Settings
+            </span>
+
+        </div>
+
+    </button>
+
+    <button
+        class="hex"
+        id="about"
+        data-action="about">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                ℹ️
+            </span>
+
+            <span class="hexText">
+                About
+            </span>
+
+        </div>
+
+    </button>
+
+    <button
+        class="hex"
+        id="vr"
+        data-action="vr">
+
+        <div class="hexContent">
+
+            <span class="hexIcon">
+                ⛶
+            </span>
+
+            <span class="hexText">
+                VR Mode
+            </span>
+
+        </div>
+
+    </button>
+
+</div>
+```
+
+</main>
+
+<div id="hint">
+    Touch a tile or use your Bluetooth controller
+</div>
+
+<!-- PANEL -->
+
+<section id="panel">
+
+```
+<div class="panelCard">
+
+    <h2 id="panelTitle">
+        iPhoneVR
+    </h2>
+
+    <div id="panelBody"></div>
+
+    <button
+        class="panelButton"
+        id="backButton">
+        Back
+    </button>
+
+</div>
+```
+
+</section>
+
+<script>
+
+/* ==================================================
+   ELEMENTS
+================================================== */
+
+const camera =
+    document.getElementById("camera");
+
+const cameraStatus =
+    document.getElementById("cameraStatus");
+
+const controllerStatus =
+    document.getElementById("controllerStatus");
+
+const panel =
+    document.getElementById("panel");
+
+const panelTitle =
+    document.getElementById("panelTitle");
+
+const panelBody =
+    document.getElementById("panelBody");
+
+const backButton =
+    document.getElementById("backButton");
+
+
+/* ==================================================
+   HAPTICS
+================================================== */
+
+function haptic(ms = 10) {
+
+    if (
+        navigator.vibrate &&
+        typeof navigator.vibrate === "function"
+    ) {
+
+        navigator.vibrate(ms);
+
+    }
+
+}
+
+
+/* ==================================================
+   REAR CAMERA
+================================================== */
+
+async function startRearCamera() {
+
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
+
+        cameraStatus.textContent =
+            "Camera: unsupported";
+
+        return;
+
+    }
+
+    try {
+
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: {
+                        ideal: "environment"
+                    },
+
+                    width: {
+                        ideal: 1920
+                    },
+
+                    height: {
+                        ideal: 1080
+                    }
+
+                },
+
+                audio: false
+
+            });
+
+        camera.srcObject = stream;
+
+        cameraStatus.textContent =
+            "Camera: rear ✓";
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        cameraStatus.textContent =
+            "Camera: permission needed";
+
+    }
+
+}
+
+
+/* ==================================================
+   PANEL
+================================================== */
+
+function openPanel(title, html) {
+
+    panelTitle.textContent =
+        title;
+
+    panelBody.innerHTML =
+        html;
+
+    panel.classList.add("open");
+
+    haptic(12);
+
+}
+
+
+function closePanel() {
+
+    panel.classList.remove("open");
+
+    haptic(8);
+
+}
+
+
+backButton.addEventListener(
+    "click",
+    closePanel
+);
+
+
+/* ==================================================
+   BUTTON ANIMATION
+================================================== */
+
+const tiles =
+    [...document.querySelectorAll(".hex")];
+
+
+tiles.forEach(tile => {
+
+    tile.addEventListener(
+        "pointerdown",
+        () => {
+
+            tile.classList.add(
+                "pressed"
+            );
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    const release =
+        () => {
+
+            tile.classList.remove(
+                "pressed"
+            );
+
+        };
+
+
+    tile.addEventListener(
+        "pointerup",
+        release
+    );
+
+    tile.addEventListener(
+        "pointercancel",
+        release
+    );
+
+    tile.addEventListener(
+        "pointerleave",
+        release
+    );
+
+
+    tile.addEventListener(
+        "click",
+        () => {
+
+            haptic(10);
+
+            handleAction(
+                tile.dataset.action
+            );
+
+        }
+    );
+
+});
+
+
+/* ==================================================
+   ACTIONS
+================================================== */
+
+function handleAction(action) {
+
+    switch(action) {
+
+        case "games":
+
+            openPanel(
+                "🎮 Games",
+
+                `
+                <p>
+                    Your VR game library.
+                </p>
+
+                <button
+                    class="panelButton"
+                    onclick="launchGame('BlockWorld')">
+
+                    🧱 BlockWorld
+
+                </button>
+
+                <button
+                    class="panelButton"
+                    onclick="launchGame('Space')">
+
+                    🚀 Space
+
+                </button>
+
+                <p class="small">
+                    More locally-running games
+                    will be added here.
+                </p>
+                `
+            );
+
+            break;
+
+
+        case "youtube":
+
+            openPanel(
+                "▶️ YouTube",
+
+                `
+                <p>
+                    Open YouTube on your iPhone.
+                </p>
+
+                <button
+                    class="panelButton"
+                    onclick="
+                        window.location.href =
+                        'https://www.youtube.com/';
+                    ">
+
+                    Open YouTube
+
+                </button>
+
+                <p class="small">
+                    A proper virtual cinema
+                    can be added later.
+                </p>
+                `
+            );
+
+            break;
+
+
+        case "browser":
+
+            openPanel(
+                "🌐 Web",
+
+                `
+                <p>
+                    Web browser mode.
+                </p>
+
+                <button
+                    class="panelButton"
+                    onclick="
+                        window.location.href =
+                        'https://www.google.com/';
+                    ">
+
+                    Open Web
+
+                </button>
+
+                <p class="small">
+                    Full in-VR browser panels
+                    require additional work
+                    because iOS restricts
+                    embedded browsing.
+                </p>
+                `
+            );
+
+            break;
+
+
+        case "photos":
+
+            openPanel(
+                "🌀 360°",
+
+                `
+                <p>
+                    360° viewer coming soon.
+                </p>
+
+                <p class="small">
+                    This will become the
+                    immersive photo/video
+                    viewer.
+                </p>
+                `
+            );
+
+            break;
+
+
+        case "settings":
+
+            openPanel(
+                "⚙️ Settings",
+
+                `
+                <p>
+                    <b>Camera:</b> rear
+                </p>
+
+                <p>
+                    <b>Viewer:</b>
+                    T.T. International
+                    3D VR Viewer Deluxe
+                </p>
+
+                <p>
+                    <b>Controls:</b>
+                    Bluetooth controller
+                </p>
+
+                <p class="small">
+                    Lens separation,
+                    eye spacing,
+                    camera opacity,
+                    and VR calibration
+                    will be added here.
+                </p>
+                `
+            );
+
+            break;
+
+
+        case "about":
+
+            openPanel(
+                "ℹ️ iPhoneVR",
+
+                `
+                <p>
+                    Prototype 0.1
+                </p>
+
+                <p class="small">
+                    Designed for
+                    iPhone 13 Pro +
+                    phone VR viewer.
+                </p>
+
+                <p class="small">
+                    No SteamVR.
+                    No PC streaming.
+                    Runs from the website.
+                </p>
+                `
+            );
+
+            break;
+
+
+        case "vr":
+
+            enterVR();
+
+            break;
+
+    }
+
+}
+
+
+/* ==================================================
+   GAME PLACEHOLDER
+================================================== */
+
+function launchGame(name) {
+
+    haptic(20);
+
+    openPanel(
+        "🎮 " + name,
+
+        `
+        <p>
+            ${name} will run locally
+            on the iPhone.
+        </p>
+
+        <p class="small">
+            This is where we will plug
+            in the actual WebGL VR game.
+        </p>
+        `
+    );
+
+}
+
+
+/* ==================================================
+   FULLSCREEN / VR MODE
+================================================== */
+
+async function enterVR() {
+
+    haptic(20);
+
+    document.body.classList.add(
+        "vrMode"
+    );
+
+
+    /*
+       Try the Fullscreen API.
+       iOS support varies depending
+       on Safari / Home Screen mode.
+    */
+
+    try {
+
+        if (
+            document.documentElement
+                .requestFullscreen
+        ) {
+
+            await document.documentElement
+                .requestFullscreen();
+
+        }
+
+    }
+
+    catch(error) {
+
+        console.log(
+            "Fullscreen unavailable",
+            error
+        );
+
+    }
+
+
+    /*
+       iOS standalone web apps
+       don't expose all browser UI.
+    */
+
+    if (
+        screen.orientation &&
+        screen.orientation.lock
+    ) {
+
+        try {
+
+            await screen.orientation.lock(
+                "landscape"
+            );
+
+        }
+
+        catch(error) {
+
+            console.log(
+                "Orientation lock unavailable"
+            );
+
+        }
+
+    }
+
+}
+
+
+/* ==================================================
+   ESC / BACK
+================================================== */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            if (
+                panel.classList.contains(
+                    "open"
+                )
+            ) {
+
+                closePanel();
+
+            }
+
+            else {
+
+                document.body
+                    .classList
+                    .remove("vrMode");
+
+            }
+
+        }
+
+    }
+);
+
+
+/* ==================================================
+   GAMEPAD
+================================================== */
+
+let selectedIndex = 0;
+
+let lastButtons = [];
+
+
+function updateGamepad() {
+
+    if (
+        !navigator.getGamepads
+    ) {
+
+        requestAnimationFrame(
+            updateGamepad
+        );
+
+        return;
+
+    }
+
+
+    const pads =
+        navigator.getGamepads();
+
+
+    const pad =
+        [...pads].find(Boolean);
+
+
+    if (pad) {
+
+        controllerStatus.textContent =
+            "Controller: connected ✓";
+
+
+        /*
+           LEFT STICK / DPAD
+           selects tiles.
+        */
+
+        const left =
+            pad.axes[0] || 0;
+
+
+        const up =
+            pad.axes[1] || 0;
+
+
+        /*
+           Simple controller navigation.
+        */
+
+        if (
+            Math.abs(left) > 0.7
+        ) {
+
+            moveSelection(
+                left > 0 ? 1 : -1
+            );
+
+        }
+
+
+        if (
+            Math.abs(up) > 0.7
+        ) {
+
+            moveSelection(
+                up > 0 ? 2 : -2
+            );
+
+        }
+
+
+        /*
+           A / Cross
+           = select
+        */
+
+        if (
+            pad.buttons[0] &&
+            pad.buttons[0].pressed &&
+            !lastButtons[0]
+        ) {
+
+            activateSelection();
+
+        }
+
+
+        /*
+           B / Circle
+           = back
+        */
+
+        if (
+            pad.buttons[1] &&
+            pad.buttons[1].pressed &&
+            !lastButtons[1]
+        ) {
+
+            if (
+                panel.classList.contains(
+                    "open"
+                )
+            ) {
+
+                closePanel();
+
+            }
+
+            else {
+
+                document.body
+                    .classList
+                    .remove("vrMode");
+
+            }
+
+        }
+
+
+        lastButtons =
+            pad.buttons.map(
+                button =>
+                    button.pressed
+            );
+
+    }
+
+    else {
+
+        controllerStatus.textContent =
+            "Controller: none";
+
+    }
+
+
+    requestAnimationFrame(
+        updateGamepad
+    );
+
+}
+
+
+function moveSelection(direction) {
+
+    selectedIndex += direction;
+
+    if (
+        selectedIndex < 0
+    ) {
+
+        selectedIndex =
+            tiles.length - 1;
+
+    }
+
+    if (
+        selectedIndex >=
+        tiles.length
+    ) {
+
+        selectedIndex = 0;
+
+    }
+
+
+    tiles.forEach(
+        tile =>
+            tile.classList.remove(
+                "selected"
+            )
+    );
+
+
+    tiles[
+        selectedIndex
+    ].classList.add(
+        "selected"
+    );
+
+
+    haptic(7);
+
+}
+
+
+/* ==================================================
+   CONTROLLER ACTIVATION
+================================================== */
+
+function activateSelection() {
+
+    const tile =
+        tiles[selectedIndex];
+
+    if (!tile) return;
+
+    tile.classList.add(
+        "pressed"
+    );
+
+    setTimeout(
+        () =>
+            tile.classList.remove(
+                "pressed"
+            ),
+        120
+    );
+
+    tile.click();
+
+}
+
+
+/* ==================================================
+   CONTROLLER EVENTS
+================================================== */
+
+window.addEventListener(
+    "gamepadconnected",
+    event => {
+
+        controllerStatus.textContent =
+            "Controller: connected ✓";
+
+        haptic(15);
+
+    }
+);
+
+
+window.addEventListener(
+    "gamepaddisconnected",
+    () => {
+
+        controllerStatus.textContent =
+            "Controller: none";
+
+    }
+);
+
+
+/* ==================================================
+   START
+================================================== */
+
+startRearCamera();
+
+updateGamepad();
+
+</script>
+
+</body>
+</html>
